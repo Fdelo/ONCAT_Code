@@ -76,24 +76,29 @@ def course():
         sql = 'SELECT DISTINCT `' + parent_table + '_course#` FROM ' + map_table + '_map'
         c.execute(sql)
         for row in c:
-            parent_course_dict[row[0]] = [row[1]]
+            parent_course_dict[row[0]] = []
 
         for key, value in parent_course_dict.iteritems():
+            sql = 'SELECT course_desc FROM ' + parent_table + '_courses WHERE `course#` = (%s)'
+            c.execute(sql, [key])
+            value.append(c.fetchone()[0])
             sql = 'SELECT learning_outcome FROM ' + parent_table + '_course_outcomes WHERE `course#` = (%s)'
             c.execute(sql, [key])
             learning_outcomes = [item[0] for item in c.fetchall()]
             value.append(learning_outcomes)
 
-        flash(parent_course_dict)
         '''
         Get all the child courses
         '''
-        sql = 'SELECT * FROM ' + child_table + '_courses'
+        sql = 'SELECT DISTINCT `' + child_table + '_course#` FROM ' + map_table + '_map'
         c.execute(sql)
         for row in c:
-            child_course_dict[row[0]] = [row[1]]
+            child_course_dict[row[0]] = []
 
         for key, value in child_course_dict.iteritems():
+            sql = 'SELECT course_desc FROM ' + child_table + '_courses WHERE `course#` = (%s)'
+            c.execute(sql, [key])
+            value.append(c.fetchone()[0])
             sql = 'SELECT learning_outcome FROM ' + child_table + '_course_outcomes WHERE `course#` = (%s)'
             c.execute(sql, [key])
             learning_outcomes = [item[0] for item in c.fetchall()]
@@ -107,6 +112,12 @@ def course():
             sql = 'SELECT approval, comments FROM ' + map_table + '_approvals WHERE `course#` = (%s) AND uid = (%s)'
             c.execute(sql, [pc, user_id])
             r = c.fetchone()
+            if r <= 0:
+                r = [None, '']
+                sql = 'INSERT INTO ' + map_table + '_approvals (approval, comments, `course#`, uid) VALUES (%s, %s, %s, %s)'
+                c.execute(sql, [r[0], r[1], pc, session['user_id']])
+                conn.commit()
+
             map_dict[pc] = [[pc, parent_course_dict[pc][0], parent_course_dict[pc][1], r[0], r[1]]]
             sql = 'SELECT mapID, `' + child_table + '_course#` FROM ' + map_table + '_map WHERE `' + parent_table + '_course#` = (%s)'
             c.execute(sql, [pc])
@@ -116,6 +127,12 @@ def course():
                 sql = 'SELECT rating, comments FROM ' + map_table + '_ratings WHERE mapID = (%s) AND uid = (%s)'
                 c.execute(sql, [row[0], user_id])
                 r = c.fetchone()
+                if r <= 0:
+                    r = [0, '']
+                    sql = 'INSERT INTO ' + map_table + '_ratings (rating, comments, mapID, uid) VALUES (%s, %s, %s, %s)'
+                    c.execute(sql, [0, '', row[0], session['user_id']])
+                    conn.commit()
+
                 temp_list.extend((r[0], r[1]))
                 map_dict[pc].append(temp_list)
 
@@ -136,7 +153,6 @@ def post_json():
         if request.method == "POST":
             dc, c, conn = connection()
             parent_table, child_table, map_table = set_tables(session['user_university'])
-            flash(session['user_id'])
             if request.form.get('classname') == 'pforms':
                 courses = request.form.get('formkeys')
                 percent = int(request.form.get('percent'))
@@ -159,13 +175,6 @@ def post_json():
                     ])
                     conn.commit()
                     return jsonify(success=True)
-                else:
-                    sql = 'INSERT INTO ' + map_table + '_rating (rating, comments, mapID, uid) VALUES (%s, %s, %s, %s)'
-                    data = c.execute(sql, [
-                        percent, thwart(comments), map_id, session['user_id']
-                    ])
-                    conn.commit()
-                    return jsonify(success=True)
 
             elif request.form.get('classname') == 'aforms':
                 coursename = request.form.get('coursename')
@@ -175,27 +184,12 @@ def post_json():
                     approval = 0
 
                 comments = request.form.get('comment')
+                sql = 'UPDATE ' + map_table + '_approvals SET approval = (%s), comments = (%s) WHERE (`course#` = (%s) AND uid = (%s))'
+                c.execute(sql, [approval, thwart(comments), coursename, session['user_id']])
+                conn.commit()
+                return jsonify(success=True)
 
-                sql = 'SELECT * FROM ' + map_table + '_approvals WHERE (`course#` = (%s) AND uid = (%s))'
-                data = c.execute(sql, [coursename, session['user_id']])
-
-                if data > 0:
-                    sql = 'UPDATE ' + map_table + '_approvals SET approval = (%s), comments = (%s) WHERE (`course#` = (%s) AND uid = (%s))'
-                    data = c.execute(sql, [
-                        approval, thwart(comments), coursename, session['user_id']
-                    ])
-                    conn.commit()
-                    return jsonify(success=True)
-
-                else:
-                    sql = 'INSERT INTO ' + map_table + '_approvals (approval, comments, `course#`, uid) VALUES (%s, %s, %s, %s)'
-                    data = c.execute(sql, [
-                        approval, thwart(comments), coursename, session['user_id']
-                    ])
-                    conn.commit()
-                    return jsonify(success=True)
-                return jsonify(success=False)
-
+            return jsonify(success=False)
     except Exception as e:
         return flash(str(e))
 

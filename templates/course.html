@@ -14,7 +14,7 @@
 					<!-- Nav tabs -->
 					<div class="col-md-2 left-side">
 						<ul class="nav nav-pills nav-stacked">
-							{% for key in map_dict.keys() %}
+							{% for key in map_dict%}
 							{% if loop.index == 1 %}
 								<li role="presentation" class="active"><a href="#{{''.join(key.split())}}" aria-controls="{{''.join(key.split())}}" role="pill" data-toggle="pill">{{ key }}</a></li>
 							{% else %}
