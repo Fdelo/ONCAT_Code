@@ -1,0 +1,166 @@
+{% extends "header.html" %}
+{% block body %}
+	<div>
+		<!-- Nav tabs -->
+		<ul class="nav nav-tabs" role="tablist">
+			<li role="presentation"><a href="#courses" aria-controls="courses" role="tab" data-toggle="tab">Courses</a></li>
+			<li role="presentation"><a href="#tables" aria-controls="tables" role="tab" data-toggle="tab">Tables</a></li>
+		</ul>
+		<!-- Tab panes -->
+		<div class="tab-content">
+			<div role="tabpanel" class="tab-pane fade in active" id="courses">
+				<div style="margin-top:10px" class="container-fluid" role="tabpanel">
+					<div class="row" style="height: 100%">
+					<!-- Nav tabs -->
+					<div class="col-md-2 left-side">
+						<ul class="nav nav-pills nav-stacked">
+							{% for key in map_dict.keys() %}
+							{% if loop.index == 1 %}
+								<li role="presentation" class="active"><a href="#{{''.join(key.split())}}" aria-controls="{{''.join(key.split())}}" role="pill" data-toggle="pill">{{ key }}</a></li>
+							{% else %}
+								<li role="presentation"><a href="#{{''.join(key.split())}}" aria-controls="{{''.join(key.split())}}" role="pill" data-toggle="pill">{{ key }}</a></li>
+							{% endif %}
+							{% endfor %}
+						</ul>
+					</div>
+
+					<!-- Tab panes -->
+					<div class="tab-content col-md-10 middle-content">
+						{% for key in map_dict.keys() %}
+							{% if loop.index == 1 %}
+								<div role="tabpanel" class="tab-pane fade in active" id="{{''.join(key.split())}}">
+							{% else %}
+								<div role="tabpanel" class="tab-pane fade" id="{{''.join(key.split())}}">
+							{% endif %}
+									{% for value in map_dict[key] %}
+										{% if loop.index == 1 %}
+											<div class="col-md-12 text-center lead coursebox">{{value[0]}} | <a href="#" data-toggle="modal" data-target="#{{''.join(value[0].split())}}M"> Learning Outcomes (Click for more info)</a> | <a href="{{url_for('static', filename='pdfs/%s' % (value[0][0:value[0].find(' ')].strip()))}}.pdf">Course Outline (Click to download)</a></div>			
+											<div class="col-md-6 coursebox">
+												{{value[1]}}
+											</div>
+											<div class="col-md-6 coursebox"> 
+												<form id="{{''.join(value[0].split())}}form" action="" class="form-inline aforms" method="post">
+													<input type="hidden" name="coursename" value="{{value[0]}}" />
+													{% if value[3] == None %}
+														<div class="col-md-5 form-group" style="margin-top: 10px;">
+															<input type="radio" name="choice" value="Yes">Yes<br>
+															<input type="radio" name="choice" value="No">No
+														</div>
+													{% elif value[3] == 0 %}
+														<div class="col-md-5 form-group" style="margin-top: 10px;">
+															<input type="radio" name="choice" value="Yes">Yes<br>
+															<input type="radio" name="choice" value="No" checked>No
+														</div>
+													{% else %}
+														<div class="col-md-5 form-group" style="margin-top: 10px;">
+															<input type="radio" name="choice" value="Yes" checked>Yes<br>
+															<input type="radio" name="choice" value="No">No
+														</div>
+													{% endif %}
+													<div style="margin-top: 10px; margin-bottom: 10px;" class="col-md-5 form-group">
+														<textarea style="resize: none;" class="form-control" rows="3"  name="comment" value={{request.form.comments}}>{{ value[4] }}</textarea>
+													</div>
+													<div style="margin-top: 10px; margin-bottom: 10px;" class="col-md-2 form-group">													
+														<a href="#" id=process_input><button class='btn btn-default'>Submit</button></a>
+														<div data-dismiss="alert" class="alert alert-success click-alerts" id="{{''.join(value[0].split())}}-alert"><strong>Success!</strong></div>
+													</div>
+												</form>
+												{% if error %}
+												<p class="error"><strong>Error: </strong>{{error}}</p>
+												{% endif %}
+												<div id="{{''.join(value[0].split())}}M" class="modal fade" tabindex="-1" role="dialog">
+													<div class="modal-dialog modal-lg" role="document">
+														<div class="modal-content">
+															<div class="modal-header">
+																<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+																<h4 class="modal-title">LEARNING OUTCOMES</h4>
+															</div>
+															<div class="modal-body">
+																<div class="row">
+																	<div class="col-md-12">
+																		{% set p_lo = value[2] %}
+																		{% for lo in value[2] %}
+																			<li>{{lo}}</li>
+																		{% endfor %}
+																	</div>
+																</div>
+															</div>
+														</div><!-- /.modal-content -->
+													</div><!-- /.modal-dialog -->
+												</div><!-- /.modal -->												
+											</div>
+										{% else %}
+											<div class="col-md-12 text-center lead coursebox">{{value[0]}} |<a href="#" data-toggle="modal" data-target="#{{''.join(value[0].split())}}M"> Learning Outcomes (Click for more info)</a> | <a href="{{url_for('static', filename='pdfs/%s' % (value[0][0:value[0].find(' ')].strip()))}}.pdf">Course Outline (Click to download)</a></div>
+											<div class="col-md-6 coursebox">
+											{{value[1]}}
+											</div>
+											<div class="col-md-6 coursebox">
+												<form id="{{value[0]}}form" action="/post_json/" class="form pforms" method="post" data-toggle="validator">
+													<input type="hidden" name="formkeys" value="{{value[0]}}|{{key}}" />
+													<div  class="col-md-5">
+														<div class="form-group has-feedback">
+															<label for="{{value[0]}}percent" class="control-label">Percent</label>
+															<div class="input-group">
+																<input id="{{value[0]}}percent" type="number" min="0" max="100" class="form-control" name=percent onkeydown="return FilterInput(event)" onpaste="handlePaste(event)" onblur="return toProgressBar(this.value, '{{value[0]}}')" value={% if value[3] == None %}0{% else %}{{value[3]}}{% endif %}>
+																<span class="input-group-addon">%</span>
+															</div>
+															<div class="help-block with-errors"></div>
+														</div>
+														
+														<div style="margin-top: 5px; margin-bottom: 10px;" class="progress">
+															<div id="{{value[0]}}progress"class="progress-bar" role="progressbar" style="width: {% if value[3] == None %}0%{% else %}{{value[3]}}%{% endif %}" aria-valuemin="0" aria-valuemax="100">
+																<p></p>
+															</div>
+														</div>
+													</div>
+													<div style="margin-top: 10px; margin-bottom: 10px;" class="col-md-5 form-group">
+														<textarea style="resize: none;" class="form-control" rows="3" name=comment value={{request.form.comment}}>{{value[4]}}</textarea>
+													</div>
+													<div style="margin-top: 10px; margin-bottom: 10px;" class="col-md-2 form-group">
+														<input type="submit" class="btn btn-default" value="Submit">
+														<div data-dismiss="alert" class="alert alert-success click-alerts" id="{{''.join(value[0].split())}}-alert"><strong>Success!</strong></div>
+													</div>
+												</form>
+												{% if error %}
+												<p class="error"><strong>Error: </strong>{{error}}</p>
+												{% endif %}
+												<div id="{{''.join(value[0].split())}}M" class="modal fade" tabindex="-1" role="dialog">
+													<div class="modal-dialog modal-lg" role="document">
+														<div class="modal-content">
+															<div class="modal-header">
+																<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+																<h4 class="modal-title">LEARNING OUTCOMES</h4>
+															</div>
+															<div class="modal-body">
+																<div class="row">
+																	<div class="col-md-6">																	
+																		{% for lo in p_lo %}
+																			<li>{{lo}}</li>
+																		{% endfor %}
+																	</div>
+																	<div class="col-md-6">																
+																		{% for lo in value[2] %}
+																			<li>{{lo}}</li>
+																		{% endfor %}
+																	</div>
+																</div>
+															</div>
+														</div><!-- /.modal-content -->
+													</div><!-- /.modal-dialog -->
+												</div><!-- /.modal -->												
+											</div>
+										{% endif %}
+									{% endfor %}
+								</div>
+							{% endfor %}
+						</div>
+					</div><!-- /.Tab Panes -->
+				</div>			
+			</div>
+			<div role="tabpanel" class="tab-pane fade" id="tables">
+				
+			
+			</div>
+		</div>
+	</div>
+{% endblock %}

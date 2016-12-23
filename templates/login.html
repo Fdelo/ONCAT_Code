@@ -1,0 +1,53 @@
+{% extends "header.html" %}
+{% block body %}
+<!-- <div class="container">
+	<div class="row">
+		<br>
+		<h4>Please Login: </h4>
+		<form action="" class="form-inline" method="post">
+			
+			
+			<input type="submit" class="btn btn-default" value="Login">
+		</form>
+
+	</div>
+</div> -->
+<link href="{{ url_for('static', filename='css/form-elements.css') }}" rel="stylesheet">
+<div class="top-content">
+	<div class="inner-bg">
+		<div class="container">
+			<div class="row">
+				<div class="col-sm-6 col-sm-offset-3 form-box">
+					<div class="form-top">
+						<div class="form-top-left">
+							<h3>Login to our site</h3>
+							<p>Enter your username and password to log on:</p>
+						</div>
+						<div class="form-top-right">
+							<i class="fa fa-lock"></i>
+						</div>
+					</div>
+					<div class="form-bottom">
+						<form role="form" action="" method="post" class="login-form">
+							<div class="form-group">
+								<label class="sr-only" for="form-username">Email</label>		
+								<input type="text" class="form-username form-control" placeholder="Email" name="email" id="form-username" value={{request.form.email}}>
+							</div>
+							<div class="form-group">
+								<label class="sr-only" for="form-password">Password</label>					
+								<input type="password" class="form-password form-control" placeholder="Password" name="password" id="form-password" value={{request.form.password}}>
+							</div>
+							<button type="submit" class="btn">Sign in!</button>
+						</form>
+					</div>
+					{% if error %}
+					<p class="error"><strong>Error: </strong>{{error}}</p>
+					{% endif %}
+				</div>
+			</div>   
+		</div>
+	</div>
+</div>
+<!-- <script src="{{ url_for('static', filename='js/jquery.backstretch.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/scripts.js') }}"></script> -->
+{% endblock %}

@@ -1,0 +1,211 @@
+#route to the course page
+# @app.route('/course2/', methods=["GET"])
+# def course2():
+	# error = None
+	# try:
+		# dc, c, conn = connection()
+		# # this will be determined by the login that is posted
+		# courseList = []
+		# courseInfo = []
+		# ratingsDict = []
+		# approvalDict = []
+		# fullCourseInfo = []
+		# sql = "SELECT CourseName FROM Courses WHERE CourseUniversity = (%s)"
+		# c.execute(sql, ["Lakehead"])
+		# for row in c:
+			# courseList.append(row[0])
+			
+		# for row in courseList:
+			# sql = "SELECT ParentCourse, ChildCourse, Percent, Comments FROM Ratings WHERE ParentCourse = (%s)"
+			# c.execute(sql, [row])
+			# for a in c.fetchall():    
+				# ratingsDict.append(a)
+				
+			# sql = "SELECT CourseName, Approval, Comments FROM Approvals WHERE CourseName = (%s) AND CollegeName = (%s)"
+			
+			# c.execute(sql, [row, "Confed"])
+			# for a in c.fetchall():
+				# approvalDict.append(a)
+		
+		# gc.collect()
+		
+		# for x in courseList:
+			# temp = []
+			# temp.append(x)
+			# for z in approvalDict:
+				# if z[0] == x:
+					# temp.append([z[0], z[1], z[2]])
+					
+			# for y in ratingsDict:
+				# if y[0] == x:
+					# temp.append([y[1], y[2], y[3]])
+			
+			# fullCourseInfo.append(temp)
+		
+		# for pCourse in fullCourseInfo:
+			# for course in pCourse[1:]:
+				# sql = "SELECT CourseName, CourseDesc,CourseLOutcomes, CourseOutline FROM Courses WHERE CourseName = (%s)"
+				# c.execute(sql, [course[0]])
+				# for a in c.fetchall():
+					# courseInfo.append(a[0])
+					# courseInfo.append([a[1],a[2],a[3]])
+
+		# return render_template('course2.html', fullCourseInfo=fullCourseInfo, courseInfo=courseInfo)
+		
+	# except Exception as e:
+		# flash(str(e))
+		# flash(sys.exc_traceback.tb_lineno)
+		# return render_template('course2.html')	
+		
+		
+# # build a form with wtforms
+# class RegistrationForm(Form):
+	# email = StringField('Email', [validators.Length(min=6, max=50)])
+	# password = PasswordField('Password', [validators.DataRequired(), validators.EqualTo('confirm', message="Passwords must match")])
+	# confirm = PasswordField('Repeat Password')
+	
+# # route to the register page
+# @app.route('/register/', methods=["GET","POST"])
+# def register_page():
+	# error=None #define a message to pass through
+	# try:
+		# form = RegistrationForm(request.form) # define registration form object
+		
+		# if request.method == "POST" and form.validate():
+			# email = form.email.data
+			# password = sha256_crypt.encrypt((str(form.password.data)))
+			# dc, c, conn = connection()
+			
+			# sql = "SELECT * FROM users WHERE email = (%s)"
+			# x = c.execute(sql, [thwart(email)])
+							
+			# if int(x) > 0:
+				# error="Email already registered."
+				# return render_template('register.html', form=form, error=error)
+			
+			# else:
+				# sql = "INSERT INTO users (password, email) VALUES (%s, %s)"
+				# c.execute(sql, [thwart(password), thwart(email)] )
+				# conn.commit()
+				# error="Registration successful"
+				# c.close()
+				# conn.close()
+				# gc.collect()
+				
+				# session['logged_in'] = True
+				# session['email'] = email
+				
+				# return redirect(url_for('course'))
+				
+		# return render_template("register.html", form=form)
+				
+	# except Exception as e:
+		# return(str(e))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+QUERIES:
+
+select  maplutoconf.`CONFCourses_course#`, SUM(rating)/COUNT(rating)
+from ratings 
+inner join maplutoconf on ratings.MapLUToCONF_mapID = maplutoconf.mapID
+WHERE maplutoconf.mapID in 
+(SELECT mapID FROM maplutoconf WHERE `CONFCourses_course#` = 'cp220')
+
+select lutoconf_map.`conf_course#`, conf_courses.`course_desc`
+from lutoconf_map 
+inner join conf_courses on lutoconf_map.`conf_course#` = conf_courses.`course#`
+
+# 'SELECT DISTINCT ' + parent_table + '_course# FROM ' + parent_table + '_courses'
+sql = 'SELECT DISTINCT `course#` FROM lu_courses'
+c.execute(sql)
+
+
+
+
+
+
+
+@app.route("/test/")
+def test():
+    dc, c, conn = connection()
+    uid = 1
+    parent_course_dict = {}
+    child_course_dict = {}
+    map_dict = {}
+
+    '''
+    Get all the parent courses
+    '''
+    # sql = 'SELECT * FROM ' + parent_table + '_courses'
+    sql = 'SELECT * FROM lu_courses'
+    c.execute(sql)
+    for row in c:
+        parent_course_dict[row[0]] = [row[1]]
+
+    for key, value in parent_course_dict.iteritems():
+        # sql = 'SELECT learning_outcome FROM ' + parent_table + '_course_outcomes WHERE `course#` = (%s)'
+        sql = 'SELECT learning_outcome FROM lu_course_outcomes WHERE `course#` = (%s)'
+        c.execute(sql, [key])
+        learning_outcomes = [item[0] for item in c.fetchall()]
+        value.append(learning_outcomes)
+
+    '''
+    Get all the child courses
+    '''
+    # sql = 'SELECT * FROM ' + child_course + '_courses'
+    sql = 'SELECT * FROM conf_courses'
+    c.execute(sql)
+    for row in c:
+        child_course_dict[row[0]] = [row[1]]
+
+    for key, value in child_course_dict.iteritems():
+        # sql = 'SELECT learning_outcome FROM ' + child_course + '_course_outcomes WHERE `course#` = (%s)'
+        sql = 'SELECT learning_outcome FROM conf_course_outcomes WHERE `course#` = (%s)'
+        c.execute(sql, [key])
+        learning_outcomes = [item[0] for item in c.fetchall()]
+        value.append(learning_outcomes)
+
+    '''
+    Map the courses
+    '''
+    # iterate through the parent courses(keys in the dict)
+    for pc in parent_course_dict.keys():
+        # sql = 'SELECT approval, comments FROM ' + map_table + '_approvals WHERE `course#` = (%s) AND uid = 1'
+        sql = 'SELECT approval, comments FROM lutoconf_approvals WHERE `course#` = (%s) AND uid = 1'
+        c.execute(sql, [pc])
+        r = c.fetchone()
+        map_dict[pc] = [[pc, parent_course_dict[pc][0], parent_course_dict[pc][1], r[0], r[1]]]
+        # sql = 'SELECT mapID, `conf_course#` FROM ' + map_table + '_map WHERE `lu_course#` = (%s)'
+        sql = 'SELECT mapID, `conf_course#` FROM lutoconf_map WHERE `lu_course#` = (%s)'
+        c.execute(sql, [pc])
+        for row in c:
+            temp_list = []  # used to store child course info neatly
+            temp_list.extend((row[1], child_course_dict[row[1]][0], child_course_dict[row[1]][1]))
+            # sql = 'SELECT rating, comments FROM ' + map_table + '_ratings WHERE mapID = (%s) AND uid = 1'
+            sql = 'SELECT rating, comments FROM lutoconf_ratings WHERE mapID = (%s) AND uid = 1'
+            c.execute(sql, [row[0]])
+            r = c.fetchone()
+            temp_list.extend((r[0], r[1]))
+            map_dict[pc].append(temp_list)
+
+    # flash(map_dict)
+    return render_template('test.html', map_dict=map_dict)
+
+
+
+
+
+
+

@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta content="width=device-width,initial-scale=1" name=viewport>
+	<title>ONCAT Curriculum Analysis</title>
+	<link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Roboto:400,100,300,500">
+	<link href="{{ url_for('static', filename='css/bootstrap.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='fonts/font-awesome/css/font-awesome.min.css') }}" rel="stylesheet">
+	<link rel="shortcut icon" href="{{ url_for('static', filename='favicon.png') }}">
+</head>
+
+<header>
+	<div class="navbar-header">
+		<a class="navbar-brand" href="/">
+		<img style="max-width: 120px; margin-top: -7px;" src="{{ url_for('static', filename='images/mainlogo.png') }}">
+		</a>
+	</div>
+	<div class="container-fluid">
+		<ul class="nav navbar-nav navbar-right">
+			<div style="margin-right: 10px; margin-left: 15px; margin-top: 5px; margin-bottom: 5px;" class="container-fluid">
+				<h5>
+					{% if session.logged_in %}
+						<a href="/logout/"><span class="glyphicon glyphicon-heart"></span> Logout</a>
+					{% else %}
+						<a href="/login/"><span class="glyphicon glyphicon-heart"></span> Login</a>
+					{% endif %}
+				</h5>
+			</div>
+		</ul>
+	</div>
+
+</header>
+
+
+<body>
+	
+	<div class="container-fluid">
+	{% with messages = get_flashed_messages() %}
+		{% if messages %}
+			{% for message in messages %}
+				<div class="alert alert-warning alert-dismissible" role=alert>
+				<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+					{{message}}
+				</div>
+			{% endfor %}
+		{% endif %}
+	{% endwith %}
+	{% block body %}{% endblock %}
+	
+	</div>
+<script src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
+<script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/1000hz-bootstrap-validator/0.11.5/validator.min.js"></script>
+<script src="{{ url_for('static', filename='js/oJs.js') }}"></script>
+</body>
+</html>
+

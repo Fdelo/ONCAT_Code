@@ -1,0 +1,132 @@
+{% extends "header.html" %}
+{% block body %}
+<body>
+	<div>
+
+		<!-- Nav tabs -->
+		<ul class="nav nav-tabs" role="tablist">
+			<li role="presentation"><a href="#courses" aria-controls="courses" role="tab" data-toggle="tab">Courses</a></li>
+			<li role="presentation"><a href="#tables" aria-controls="tables" role="tab" data-toggle="tab">Tables</a></li>
+		</ul>
+
+		<!-- Tab panes -->
+		<div class="tab-content">
+			<div role="tabpanel" class="tab-pane fade in active" id="courses">
+				<div style="margin-top:10px" class="container-fluid" role="tabpanel">
+					<div class="row">
+						<!-- Nav tabs -->
+						<ul class="col-md-2 nav nav-pills nav-stacked">
+							{% for c in fullCourseInfo %}
+							<li role="presentation"><a href="#{{''.join(c[0].split())}}" aria-controls="{{''.join(c[0].split())}}" role="pill" data-toggle="pill">{{ c[0] }}</a></li>
+							{% endfor %}
+						</ul>
+
+						<!-- Tab panes -->
+						<div class="tab-content col-md-10">
+						
+							{% for c in fullCourseInfo %}
+								<div role="tabpanel" class="tab-pane fade" id="{{''.join(c[0].split())}}">
+									{% for cc in c[1:] %}
+										{% if loop.index == 1 %}
+											<div class="col-md-12 text-center lead coursebox">{{cc[0]}} | <a href="#" data-toggle="modal" data-target="#myModal"> Learning Outcomes (Click for more info)</a> | Course Outline (Click to download)</div>
+											<div class="col-md-6 coursebox">
+												{{courseInfo[courseInfo.index(cc[0]) + 1][0]}}
+											</div>
+											<div class="col-md-6 coursebox"> 
+												<form id="{{''.join(cc[0].split())}}form" action="" class="form-inline lforms" method="post">
+													{% if cc[1] == None %}
+														<div class="col-md-5 form-group" style="margin-top: 10px;">
+															<input type="radio" name="choice" value="Yes">Yes<br>
+															<input type="radio" name="choice" value="No">No
+														</div>
+													{% elif cc[1] == 0%}
+														<div class="col-md-5 form-group" style="margin-top: 10px;">
+															<input type="radio" name="choice" value="Yes">Yes<br>
+															<input type="radio" name="choice" value="No" checked>No
+														</div>
+													{% else %}
+														<div class="col-md-5 form-group" style="margin-top: 10px;">
+															<input type="radio" name="choice" value="Yes" checked>Yes<br>
+															<input type="radio" name="choice" value="No">No
+														</div>
+													{% endif %}
+													<div style="margin-top: 10px; margin-bottom: 10px;" class="col-md-5 form-group">
+														<textarea style="resize: none;" class="form-control" rows="3"  name="comment" value={{request.form.comments}}>{% if cc[2] == None %}{% else %}{{cc[2]}}{% endif %}</textarea>
+													</div>
+													<div style="margin-top: 10px; margin-bottom: 10px;" class="col-md-2 form-group">
+														<!-- <input type="submit" class="btn btn-default" value="Submit"> -->
+														<a href=# id=process_input><button class='btn btn-default'>Submit</button></a>
+													</div>
+												</form>
+												{% if error %}
+												<p class="error"><strong>Error: </strong>{{error}}</p>
+												{% endif %}
+											</div>
+										{% else %}
+											<div class="col-md-12 text-center lead coursebox">{{cc[0]}} | Learning Outcomes (Click for more info) | Course Outline (Click to download)</div>
+											<div class="col-md-6 coursebox">
+												{{courseInfo[courseInfo.index(cc[0]) + 1][0]}}
+											</div>
+											<div class="col-md-6 coursebox">
+												<form id="{{cc[0]}}form" action="/post_json/" class="form pforms" method="post" data-toggle="validator">
+													<input type="hidden" name="formkeys" value="{{cc[0]}}|{{c[0]}}" />
+													<div  class="col-md-5">
+														<div class="form-group has-feedback">
+															<label for="{{cc[0]}}percent" class="control-label">Percent</label>
+															<div class="input-group">
+																<input id="{{cc[0]}}percent" type="number" min="0" max="100" class="form-control" name=percent onkeydown="return FilterInput(event)" onpaste="handlePaste(event)" onblur="return toProgressBar(this.value, '{{cc[0]}}')" value={% if cc[1] == None %}0{% else %}{{cc[1]}}{% endif %}>
+																<span class="input-group-addon">%</span>
+															</div>
+															<div class="help-block with-errors"></div>
+														</div>
+														
+														<div style="margin-top: 5px; margin-bottom: 10px;" class="progress">
+															<div id="{{cc[0]}}progress"class="progress-bar" role="progressbar" style="width: {% if cc[1] == None %}0%{% else %}{{cc[1]}}%{% endif %}" aria-valuemin="0" aria-valuemax="100">
+																<p></p>
+															</div>
+														</div>
+													</div>
+													<div style="margin-top: 10px; margin-bottom: 10px;" class="col-md-5 form-group">
+														<textarea style="resize: none;" class="form-control" rows="3" name=comment value={{request.form.comment}}>{% if cc[2] == None %}{% else %}{{cc[2]}}{% endif %}</textarea>
+													</div>
+													<div style="margin-top: 10px; margin-bottom: 10px;" class="col-md-2 form-group">
+														<input type="submit" class="btn btn-default" value="Submit">
+														<!-- <button class='btn btn-default  pforms' type="button">Submit</button> -->
+													</div>
+												</form>
+												{% if error %}
+												<p class="error"><strong>Error: </strong>{{error}}</p>
+												{% endif %}
+											</div>
+										{% endif %}
+										
+									{% endfor %}
+								</div>
+							{% endfor %}
+						</div>
+					</div>
+
+				</div>			
+			</div>
+			<div role="tabpanel" class="tab-pane fade" id="tables">...</div>
+		</div>
+
+	</div>
+	<div id="myModal" class="modal fade" tabindex="-1" role="dialog">
+		<div class="modal-dialog" role="document">
+			<div class="modal-content">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+					<h4 class="modal-title">LEARNING OUTCOMES</h4>
+				</div>
+				<div class="modal-body">
+					<p>One fine body&hellip;</p>
+				</div>
+				<div class="modal-footer">
+				
+				</div>
+			</div><!-- /.modal-content -->
+		</div><!-- /.modal-dialog -->
+	</div><!-- /.modal -->
+</body>
+{% endblock %}
